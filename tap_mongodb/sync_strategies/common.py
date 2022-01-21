@@ -167,10 +167,16 @@ def transform_value(value, path):
     return value
 
 def row_to_singer_record(stream, row, version, time_extracted):
+
+    mdata = metadata.to_map(stream['metadata'])
+    is_document = metadata.get(mdata, (), 'document')
+
     # pylint: disable=unidiomatic-typecheck
     try:
         row_to_persist = {k:transform_value(v, [k]) for k, v in row.items()
                           if type(v) not in [bson.min_key.MinKey, bson.max_key.MaxKey]}
+        if(is_document):
+            row_to_persist = {**row_to_persist , **{'document': row_to_persist}}
     except MongoInvalidDateTimeException as ex:
         raise Exception("Error syncing collection {}, object ID {} - {}".format(stream["tap_stream_id"], row['_id'], ex)) from ex
 
