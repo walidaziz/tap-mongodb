@@ -371,6 +371,9 @@ def main_impl():
     if not verify_mode and use_ssl:
         connection_params["ssl_cert_reqs"] = ssl.CERT_NONE
 
+    if config['ssl_ca_certs']:
+        connection_params["ssl_ca_certs"] = config['ssl_ca_certs']
+    
     client = pymongo.MongoClient(**connection_params)
 
     LOGGER.info('Connected to MongoDB host: %s, version: %s',
