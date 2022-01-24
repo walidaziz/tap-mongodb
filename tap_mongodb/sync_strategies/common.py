@@ -19,6 +19,7 @@ COUNTS = {}
 TIMES = {}
 SCHEMA_COUNT = {}
 SCHEMA_TIMES = {}
+SCHEMA_SPECIFIED = {}
 
 class InvalidProjectionException(Exception):
     """Raised if projection blacklists _id"""

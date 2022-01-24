@@ -284,6 +284,7 @@ def sync_stream(client, stream, state):
     common.SCHEMA_COUNT[tap_stream_id] = 0
     common.SCHEMA_TIMES[tap_stream_id] = 0
 
+    common.SCHEMA_SPECIFIED[tap_stream_id] = bool(stream["schema"].get("properties"))
 
     md_map = metadata.to_map(stream['metadata'])
     replication_method = metadata.get(md_map, (), 'replication-method')
