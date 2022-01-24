@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timezone
 import bson
 import decimal
 from jsonschema import validate
@@ -434,3 +435,8 @@ class TestRowToSchemaMessage(unittest.TestCase):
         self.assertTrue(changed)
         self.assertFalse(changed_2)
         self.assertEqual(expected, schema)
+
+
+def test_get_mongodb_utc_datetime():
+    naive_datetime = datetime.utcnow()
+    assert common.get_mongodb_utc_datetime(naive_datetime) == naive_datetime.replace(tzinfo=timezone.utc)

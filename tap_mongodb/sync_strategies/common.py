@@ -4,14 +4,13 @@ import datetime
 import time
 import uuid
 import decimal
+from typing import Any, List
 import bson
 from bson import objectid, timestamp, datetime as bson_datetime
 import singer
 from singer import utils, metadata
 from terminaltables import AsciiTable
 
-import pytz
-import tzlocal
 
 INCLUDE_SCHEMAS_IN_DESTINATION_STREAM_NAME = False
 UPDATE_BOOKMARK_PERIOD = 1000
@@ -56,11 +55,13 @@ def get_stream_version(tap_stream_id, state):
 
     return stream_version
 
+
+def get_mongodb_utc_datetime(value):
+    return value.replace(tzinfo=datetime.timezone.utc)
+
 def class_to_string(bookmark_value, bookmark_type):
     if bookmark_type == 'datetime':
-        timezone = tzlocal.get_localzone()
-        local_datetime = timezone.localize(bookmark_value)
-        utc_datetime = local_datetime.astimezone(pytz.UTC)
+        utc_datetime = get_mongodb_utc_datetime(bookmark_value)
         return utils.strftime(utc_datetime)
     if bookmark_type == 'Timestamp':
         return '{}.{}'.format(bookmark_value.time, bookmark_value.inc)
@@ -97,10 +98,8 @@ def string_to_class(str_value, type_value):
                                                  .format(type_value))
 
 def safe_transform_datetime(value, path):
-    timezone = tzlocal.get_localzone()
     try:
-        local_datetime = timezone.localize(value)
-        utc_datetime = local_datetime.astimezone(pytz.UTC)
+        utc_datetime = get_mongodb_utc_datetime(value)
     except Exception as ex:
         if str(ex) == "year is out of range" and value.year == 0:
             # NB: Since datetimes are persisted as strings, it doesn't
@@ -120,7 +119,7 @@ def safe_transform_datetime(value, path):
     return utils.strftime(utc_datetime)
 
 # pylint: disable=too-many-return-statements,too-many-branches
-def transform_value(value, path):
+def transform_value(value: Any, path: List[str]) -> Any:
     if isinstance(value, list):
         # pylint: disable=unnecessary-lambda
         return list(map(lambda v: transform_value(v[1], path + [v[0]]), enumerate(value)))
@@ -140,9 +139,7 @@ def transform_value(value, path):
         # Return the original base64 encoded string
         return base64.b64encode(value).decode('utf-8')
     if isinstance(value, datetime.datetime):
-        timezone = tzlocal.get_localzone()
-        local_datetime = timezone.localize(value)
-        utc_datetime = local_datetime.astimezone(pytz.UTC)
+        utc_datetime = get_mongodb_utc_datetime(value)
         return utils.strftime(utc_datetime)
     if isinstance(value, bson.decimal128.Decimal128):
         return value.to_decimal()
