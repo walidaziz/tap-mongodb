@@ -71,7 +71,7 @@ def sync_collection(client, stream, state, projection):
     find_filter = {}
     if replication_key_value_bookmark:
         find_filter[replication_key_name] = {}
-        find_filter[replication_key_name]['$gte'] = \
+        find_filter[replication_key_name]['$gt'] = \
             common.string_to_class(replication_key_value_bookmark,
                                    stream_state.get('replication_key_type'))
 
